@@ -1,5 +1,5 @@
 {
-  "name": "@metanutrition/react-native-health",
+  "name": "react-native-health",
   "version": "1.12.0",
   "description": "A React Native package to interact with Apple HealthKit",
   "main": "index.js",
