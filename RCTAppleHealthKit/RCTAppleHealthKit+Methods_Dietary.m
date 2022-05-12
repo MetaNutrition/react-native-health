@@ -13,8 +13,6 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventDispatcher.h>
 
-@interface RCT_EXTERN_MODULE(LanguageTranslationModule, NSObject)
-
 
 @implementation RCTAppleHealthKit (Methods_Dietary)
 
