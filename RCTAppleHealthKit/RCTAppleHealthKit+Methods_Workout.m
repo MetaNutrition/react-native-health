@@ -55,7 +55,7 @@
 
 
     HKWorkout *workout = [
-                          HKWorkout workoutWithActivityType:type startDate:startDate endDate:endDate workoutEvents:nil totalEnergyBurned:totalEnergyBurned totalDistance:totalDistance metadata: nil
+                          HKWorkout workoutWithActivityType:type startDate:startDate endDate:endDate duration:duration totalEnergyBurned:totalEnergyBurned totalDistance:totalDistance metadata:nil
                           ];
 
     void (^completion)(BOOL success, NSError *error);
