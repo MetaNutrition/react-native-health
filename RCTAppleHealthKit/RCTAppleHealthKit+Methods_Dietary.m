@@ -13,6 +13,9 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventDispatcher.h>
 
+@interface RCT_EXTERN_MODULE(LanguageTranslationModule, NSObject)
+
+
 @implementation RCTAppleHealthKit (Methods_Dietary)
 
 - (void)dietary_getEnergyConsumedSamples:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
@@ -160,7 +163,7 @@
             //@"HKFoodImageName":@"FoodImageName" // Food icon name
     };
 
-    // Create nutrtional data for food //
+    // Create nutritional data for food //
     NSMutableSet *mySet = [[NSMutableSet alloc] init];
     if (biotinValue > 0){
         HKQuantitySample* biotin = [HKQuantitySample quantitySampleWithType:[HKQuantityType quantityTypeForIdentifier:HKQuantityTypeIdentifierDietaryBiotin]
@@ -475,6 +478,23 @@
         }
         callback(@[[NSNull null], @true]);
     }];
+}
+
+- (void)deleteFood:(NSString *)oid callback:(RCTResponseSenderBlock)callback
+{
+    HKCorrelationType *foodType = [HKCorrelationType correlationTypeForIdentifier:HKCorrelationTypeIdentifierFood];
+    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:oid];
+    NSPredicate *uuidPredicate = [HKQuery predicateForObjectWithUUID:uuid];
+    
+    [self.healthStore deleteObjectsOfType:foodType predicate:uuidPredicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable error) {
+        if (!success) {
+            NSLog(@"An error occured while deleting the food object %@. The error was: ", error);
+            callback(@[RCTMakeError(@"An error occured while food the object", error, nil)]);
+            return;
+        }
+        callback(@[[NSNull null], @(deletedObjectCount)]);
+    }];
+    
 }
 
 - (void)saveWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
