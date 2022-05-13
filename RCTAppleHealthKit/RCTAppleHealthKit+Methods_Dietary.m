@@ -14,6 +14,7 @@
 #import <React/RCTEventDispatcher.h>
 
 
+
 @implementation RCTAppleHealthKit (Methods_Dietary)
 
 - (void)dietary_getEnergyConsumedSamples:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
@@ -112,6 +113,7 @@
 - (void)saveFood:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
 {
     NSString *foodNameValue = [RCTAppleHealthKit stringFromOptions:input key:@"foodName" withDefault:nil];
+    NSString *foodId = [RCTAppleHealthKit stringFromOptions:input key:@"foodId" withDefault:nil];
     NSString *mealNameValue = [RCTAppleHealthKit stringFromOptions:input key:@"mealType" withDefault:nil];
     NSDate *timeFoodWasConsumed = [RCTAppleHealthKit dateFromOptions:input key:@"date" withDefault:[NSDate date]];
     double biotinValue = [RCTAppleHealthKit doubleFromOptions:input key:@"biotin" withDefault:(double)0];
@@ -156,7 +158,7 @@
     NSDictionary *metadata = @{
             HKMetadataKeyFoodType:foodNameValue,
             //@"HKFoodBrandName":@"FoodBrandName", // Restaurant name or packaged food brand name
-            //@"HKFoodTypeUUID":@"FoodTypeUUID", // Identifier for this food
+            @"HKFoodTypeUUID":foodId, // Identifier for this food
             @"HKFoodMeal":mealNameValue//, // Breakfast, Lunch, Dinner, or Snacks
             //@"HKFoodImageName":@"FoodImageName" // Food icon name
     };
@@ -478,20 +480,82 @@
     }];
 }
 
-- (void)deleteFood:(NSString *)oid callback:(RCTResponseSenderBlock)callback
+- (void)deleteFood:(NSDictionary *)input
+          callback:(RCTResponseSenderBlock)callback
 {
-    HKCorrelationType *foodType = [HKCorrelationType correlationTypeForIdentifier:HKCorrelationTypeIdentifierFood];
-    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:oid];
-    NSPredicate *uuidPredicate = [HKQuery predicateForObjectWithUUID:uuid];
+//    HKCorrelationType *foodType = [HKCorrelationType correlationTypeForIdentifier:HKCorrelationTypeIdentifierFood];
+//    NSPredicate *explicitMetadataKey = [NSPredicate predicateWithFormat:@"%K.%K == %@",
+//                                        HKPredicateKeyPathMetadata,
+//                                        @"HKFoodTypeUUID",
+//                                        foodId];
+//
+//
+//
+//
+//    [self.healthStore deleteObjectsOfType:foodType predicate:explicitMetadataKey withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable error) {
+//        if (!success) {
+//            NSLog(@"An error occured while deleting the food object %@. The error was: ", error);
+//            callback(@[RCTMakeError(@"An error occured while food the object", error, nil)]);
+//            return;
+//        }
+//        callback(@[[NSNull null], @(deletedObjectCount)]);
+//    }];
     
-    [self.healthStore deleteObjectsOfType:foodType predicate:uuidPredicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable error) {
-        if (!success) {
-            NSLog(@"An error occured while deleting the food object %@. The error was: ", error);
-            callback(@[RCTMakeError(@"An error occured while food the object", error, nil)]);
+    HKCorrelationType *foodType = [HKObjectType correlationTypeForIdentifier:HKCorrelationTypeIdentifierFood];
+
+    NSDate *startDate = [RCTAppleHealthKit dateFromOptions:input key:@"startDate" withDefault:nil];
+    NSDate *endDate = [RCTAppleHealthKit dateFromOptions:input key:@"endDate" withDefault:[NSDate date]];
+    if(startDate == nil){
+        callback(@[RCTMakeError(@"startDate is required in options", nil, nil)]);
+        return;
+    }
+    
+    NSPredicate *predicate = [RCTAppleHealthKit predicateForSamplesBetweenDates:startDate endDate:endDate];
+    
+    HKSampleQuery *query = [[HKSampleQuery alloc] initWithSampleType:foodType predicate:predicate limit:HKObjectQueryNoLimit sortDescriptors:nil resultsHandler:^(HKSampleQuery *query, NSArray *results, NSError *error) {
+        if (!results) {
+            NSLog(@"An error occured fetching the user's tracked food. In your app, try to handle this gracefully. The error was: %@.", error);
+
             return;
         }
-        callback(@[[NSNull null], @(deletedObjectCount)]);
+
+        dispatch_async(dispatch_get_global_queue
+           (DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            __block int deletedObjectCount = 0;
+            for (HKCorrelation *foodCorrelation in results) {
+                
+                if([[foodCorrelation.metadata valueForKey:@"HKFoodTypeUUID"] isEqualToString:[RCTAppleHealthKit stringFromOptions:input key:@"foodId" withDefault:nil]]) {
+                    NSLog(@"%@",foodCorrelation.metadata);
+                    NSSet *objs = foodCorrelation.objects;
+                    for (HKQuantitySample *sample in objs) {
+                        [self.healthStore deleteObject:sample withCompletion:^(BOOL success, NSError *error) {
+                            if (success) {
+                                NSLog(@"Success. delete sample");
+                                deletedObjectCount = deletedObjectCount + 1;
+                            }
+                            else {
+                                NSLog(@"delete: An error occured deleting the sample. In your app, try to handle this gracefully. The error was: %@.", error);
+                            }
+                        }];
+                    }
+
+                    [self.healthStore deleteObject:foodCorrelation withCompletion:^(BOOL success, NSError *error) {
+                        if (success) {
+                            NSLog(@"Success. delete %@", [foodCorrelation.metadata valueForKey:HKMetadataKeyExternalUUID]);
+                            callback(@[[NSNull null], [NSNumber numberWithInt:deletedObjectCount]]);
+                        }
+                        else {
+                            NSLog(@"delete: An error occured deleting the Correlation. In your app, try to handle this gracefully. The error was: %@.", error);
+                            callback(@[RCTMakeError(@"An error occured while deleting the food", error, nil)]);
+                        }
+                    }];
+                    return;
+                }
+            }
+        });
     }];
+
+    [self.healthStore executeQuery:query];
     
 }
 
