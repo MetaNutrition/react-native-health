@@ -16,7 +16,7 @@ declare module 'react-native-health' {
   }
 
   export interface HKErrorResponse {
-    message?: string;
+    message?: string
   }
 
   export interface AppleHealthKit {
@@ -71,7 +71,7 @@ declare module 'react-native-health' {
       options: HealthValueOptions,
       callback: (error: string, result: HealthValue) => void,
     ): void
-    
+
     getLatestWaistCircumference(
       options: HealthUnitOptions,
       callback: (err: string, results: HealthValue) => void,
@@ -101,7 +101,7 @@ declare module 'react-native-health' {
       options: HealthInputOptions,
       callback: (err: string, results: Array<HealthValue>) => void,
     ): void
-  
+
     saveBmi(
       options: HealthValueOptions,
       callback: (error: string, result: HealthValue) => void,
@@ -202,7 +202,17 @@ declare module 'react-native-health' {
       callback: (error: string, result: HealthValue) => void,
     ): void
 
+    deleteFood(
+      options: HealthInputOptions & { foodId: string },
+      callback: (error: string, result: HealthValue) => void,
+    ): void
+
     saveWater(
+      options: HealthValueOptions,
+      callback: (error: string, result: HealthValue) => void,
+    ): void
+
+    deleteWater(
       options: HealthValueOptions,
       callback: (error: string, result: HealthValue) => void,
     ): void
@@ -400,8 +410,8 @@ declare module 'react-native-health' {
     getHeadphoneAudioExposure(
       options: HealthInputOptions,
       callback: (err: string, results: HealthValue[]) => void,
-    ):void
-    
+    ): void
+
     getClinicalRecords(
       options: HealthClinicalRecordOptions,
       callback: (err: string, results: Array<HealthClinicalRecord>) => void,
@@ -446,10 +456,10 @@ declare module 'react-native-health' {
   }
 
   export interface HeartbeatSeriesSampleValue extends BaseValue {
-    heartbeatSeries: ({
+    heartbeatSeries: {
       timeSinceSeriesStart: number
       precededByGap: boolean
-    })[]
+    }[]
   }
 
   export interface HealthUnitOptions {
@@ -484,12 +494,12 @@ declare module 'react-native-health' {
   }
 
   export interface ElectrocardiogramSampleValue extends BaseValue {
-    classification: ElectrocardiogramClassification,
-    averageHeartRate: number,
-    samplingFrequency: number,
-    device: string,
-    algorithmVersion: number,
-    voltageMeasurements: (number[])[]
+    classification: ElectrocardiogramClassification
+    averageHeartRate: number
+    samplingFrequency: number
+    device: string
+    algorithmVersion: number
+    voltageMeasurements: number[][]
   }
 
   export interface HealthValueOptions extends HealthUnitOptions {
@@ -533,14 +543,14 @@ declare module 'react-native-health' {
     LabResultRecord = 'LabResultRecord',
     MedicationRecord = 'MedicationRecord',
     ProcedureRecord = 'ProcedureRecord',
-    VitalSignRecord = 'VitalSignRecord'
+    VitalSignRecord = 'VitalSignRecord',
   }
 
   export interface HealthClinicalRecord extends BaseValue {
-    sourceName: string,
-    sourceId: string,
-    displayName: string,
-    fhirData: any,
+    sourceName: string
+    sourceId: string
+    displayName: string
+    fhirData: any
   }
 
   /* Health Constants */
@@ -785,7 +795,7 @@ declare module 'react-native-health' {
     InconclusivePoorReading = 'InconclusivePoorReading',
     InconclusiveOther = 'InconclusiveOther',
     Unrecognized = 'Unrecognized',
-  }  
+  }
 
   export enum BloodGlucoseMealTime {
     Preprandial = 1,

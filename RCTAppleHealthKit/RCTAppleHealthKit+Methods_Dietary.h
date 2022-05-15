@@ -14,6 +14,7 @@
 - (void)deleteFood:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback;
 
 - (void)saveWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback;
+- (void)deleteWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback;
 - (void)getWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback;
 
 - (void)dietary_getEnergyConsumedSamples:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback;

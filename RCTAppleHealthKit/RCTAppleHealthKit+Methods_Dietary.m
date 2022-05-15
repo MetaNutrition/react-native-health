@@ -581,6 +581,30 @@
     }];
 }
 
+- (void)deleteWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
+{
+    NSDate *startDate = [RCTAppleHealthKit dateFromOptions:input key:@"startDate" withDefault:nil];
+    NSDate *endDate = [RCTAppleHealthKit dateFromOptions:input key:@"endDate" withDefault:[NSDate date]];
+    if(startDate == nil){
+        callback(@[RCTMakeError(@"startDate is required in options", nil, nil)]);
+        return;
+    }
+    NSPredicate * predicate = [RCTAppleHealthKit predicateForSamplesBetweenDates:startDate endDate:endDate];
+
+    HKQuantityType *waterType = [HKQuantityType quantityTypeForIdentifier:HKQuantityTypeIdentifierDietaryWater];
+   
+    
+    [self.healthStore deleteObjectsOfType:waterType predicate:predicate withCompletion:^(BOOL success, NSUInteger deletedObjectCount, NSError * _Nullable error) {
+        if (!success) {
+            NSLog(@"An error occured while deleting water sample %@. The error was: ", error);
+            callback(@[RCTMakeError(@"An error occured while deleting the water samples", error, nil)]);
+            return;
+        }
+        callback(@[[NSNull null], @(deletedObjectCount)]);
+    }];
+
+}
+
 - (void)getWater:(NSDictionary *)input callback:(RCTResponseSenderBlock)callback
 {
     NSDate *date = [RCTAppleHealthKit dateFromOptions:input key:@"date" withDefault:[NSDate date]];
